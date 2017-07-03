@@ -1,0 +1,36 @@
+# Orchestrates all the images that need to be 'compose' for the app to work
+# image: is the image from the repo to dowloads
+# environment: environment variables inside the docker container
+# ports: port mapping host:container
+# volumes folder mapping host:container, everything in host to copy over container
+postgres:
+  image: postgres:9.4.5
+  # as indicated in the documentation postgres images requires password and username
+  environment:
+    POSTGRES_USER: mobydock
+    POSTGRES_PASSWORD: yourpassword
+  ports:
+    - '5432:5432'
+  volumes:
+    - ~/.docker-volumes/mobydock/postgresql/data:/var/lib/postgresql/data
+
+redis:
+  image: redis:2.8.22
+  ports:
+    - '6379:6379'
+  volumes:
+    - ~/.docker-volumes/mobydock/redis/data:/var/lib/redis/data
+
+mobydock:
+  # build: we are building our own image not downloading
+  build: .
+  # links the other images so that they can communicate with each other.
+  links:
+    - postgres
+    - redis
+  volumes:
+    - .:/mobydock
+  ports:
+    - '8000:8000'
+  env_file:
+    - .mobydock.env
