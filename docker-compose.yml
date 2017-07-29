@@ -4,13 +4,18 @@
 # ports: port mapping host:container
 # volumes folder mapping host:container, everything in host to copy over container
 postgres:
+  # image that this container is going to run from
   image: postgres:9.4.5
   # as indicated in the documentation postgres images requires password and username
   environment:
+  # some images required of certain envs to be set in order to work
     POSTGRES_USER: mobydock
     POSTGRES_PASSWORD: yourpassword
   ports:
+    # host:container
     - '5432:5432'
+    # volume is similar to COPY directive on the docker file
+    # host:container
   volumes:
     - ~/.docker-volumes/mobydock/postgresql/data:/var/lib/postgresql/data
 
@@ -22,15 +27,24 @@ redis:
     - ~/.docker-volumes/mobydock/redis/data:/var/lib/redis/data
 
 mobydock:
-  # build: we are building our own image not downloading
+  # build: we are building our app image
   build: .
-  # links the other images so that they can communicate with each other.
+  # docker way of linking containers together that in one host
   links:
     - postgres
     - redis
   volumes:
+    # this is the same that COPY is doing on the docker file but for some reason
+    # it is necessary on for local dev to be able to make live changes to the code.
     - .:/mobydock
   ports:
     - '8000:8000'
+  # env file
   env_file:
     - .mobydock.env
+
+
+# commands are run using the docker compose
+# the weird part is just setting the file ownser to be the current user and not root
+# files own by root are annoying to deal with cuz you can not edit them etc.
+# docker-compose run --user "$(id -u):$(id -g)" mobydock rake db:setup
